@@ -20,12 +20,20 @@ public:
     void setAutoIndex(bool autoIndex);
 
 private:
+    bool f_forward;
+    bool f_backward;
+    bool f_steerLeft;
+    bool f_steerRight;
+
     PwmOut* po_forward;
     PwmOut* po_backward;
-    DigitalOut* do_steerLeft;
-    DigitalOut* do_steerRight;
+    PwmOut* po_steerLeft;
+    PwmOut* po_steerRight;
     Lights* lights;
     bool autoIndex;
+
+    Thread *controlThread;
+    static void controlThread_main(void const *argument);
 };
     
 #endif
