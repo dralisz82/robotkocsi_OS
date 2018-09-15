@@ -1,26 +1,24 @@
 #include "drive.h"
+#include <math.h>
 
 Drive::Drive() {}
-Drive::Drive(PinName pF, PinName pB, PinName pL, PinName pR, Lights* lights) {
-    // create Pwm and DigitalOut objects
+Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
+    // create Pwm and Servo objects
     po_forward = new PwmOut(pF);
     po_backward = new PwmOut(pB);
-    po_steerLeft = new PwmOut(pL);
-    po_steerRight = new PwmOut(pR);
+    po_steering = new PwmOut(pS);
     
     this->lights = lights;
     autoIndex = (lights)?true:false;
     
     po_forward->period(0.0001); // 10kHz
     po_backward->period(0.0001); // 10kHz
-    po_steerLeft->period(0.0001); // 10kHz
-    po_steerRight->period(0.0001); // 10kHz
+    po_steering->period(0.02); // 50Hz
 
-    // initialize flags
+    // initialize variables
     f_forward = false;
     f_backward = false;
-    f_steerLeft = false;
-    f_steerRight = false;
+    steeringTargetPosition = 0.065f; // 1.3 ms
     
     controlThread = new Thread(controlThread_main, this);
 
@@ -30,8 +28,7 @@ Drive::Drive(PinName pF, PinName pB, PinName pL, PinName pR, Lights* lights) {
 Drive::~Drive() {
     delete po_forward;
     delete po_backward;
-    delete po_steerLeft;
-    delete po_steerRight;
+    delete po_steering;
 }
 
 /**
@@ -44,29 +41,29 @@ void Drive::controlThread_main(void const *argument) {
     float backwardPower = 0.0f;
     bool motorDebug = false;
     
-    float steerLeftPower = 0.0f;
-    float steerRightPower = 0.0f;
+    float steeringServoPosition = 0.065f; // 1.3 ms
     bool steeringDebug = false;
-    
-    // 20 Hz control loop
+
+    // 50 Hz control loop
     while (true) {
+        // main drive control
         if(self->f_forward) {
-            motorDebug = true;
+            // motorDebug = true;
             if(forwardPower < 0.1f)
                 forwardPower = 1.0f;  // initial torque
             else {
                 if(forwardPower > 0.5f)
-                    forwardPower -= 0.1f; // decreasing torque to a constant 50%
+                    forwardPower -= 0.01f; // decreasing torque to a constant 50%
             }
         } else
             forwardPower = 0.0f;
         if(self->f_backward) {
-            motorDebug = true;
+            // motorDebug = true;
             if(backwardPower < 0.1f)
                 backwardPower = 1.0f;  // initial torque
             else {
-                if(backwardPower > 0.7f)
-                    backwardPower -= 0.1f; // decreasing torque to a constant 70%
+                if(backwardPower > 0.8f)
+                    backwardPower -= 0.002f; // decreasing torque to a constant 80%
             }
         } else
             backwardPower = 0.0f;
@@ -78,35 +75,19 @@ void Drive::controlThread_main(void const *argument) {
         if(!(self->f_forward) && !(self->f_backward))
             motorDebug = false;
 
-        if(self->f_steerLeft) {
+        // steering control
+        if(fabs(self->steeringTargetPosition - steeringServoPosition) > 0.001f) {
             steeringDebug = true;
-            if(steerLeftPower < 0.1f)
-                steerLeftPower = 1.0f;  // initial torque
-            else {
-                if(steerLeftPower > 0.9f)
-                    steerLeftPower -= 0.02f; // decreasing torque to a constant 90%
-            }
-        } else
-            steerLeftPower = 0.0f;
-        if(self->f_steerRight) {
-            steeringDebug = true;
-            if(steerRightPower < 0.1f)
-                steerRightPower = 1.0f;  // initial torque
-            else {
-                if(steerRightPower > 0.9f)
-                    steerRightPower -= 0.02f; // decreasing torque to a constant 90%
-            }
-        } else
-            steerRightPower = 0.0f;
+            if(self->steeringTargetPosition > steeringServoPosition)
+                steeringServoPosition += 0.001f;
+            else
+                steeringServoPosition -= 0.001f;
+            if(steeringDebug)
+                printf("Steering position (target and actual): %f, %f\n", self->steeringTargetPosition, steeringServoPosition);
+        }
+        self->po_steering->write(steeringServoPosition);
 
-        self->po_steerLeft->write(steerLeftPower);
-        self->po_steerRight->write(steerRightPower);
-        if(steeringDebug)
-            printf("Steering power: %f, %f\n", steerLeftPower, steerRightPower);
-        if(!(self->f_steerLeft) && !(self->f_steerRight))
-            steeringDebug = false;
-
-        Thread::wait(50);
+        Thread::wait(20);   // 50 Hz
     }
 }
 
@@ -131,25 +112,26 @@ void Drive::stop() {
     f_backward = false;
 }
 
-void Drive::steerLeft() {
+void Drive::steerLeft(float target) {
+    if(target >= 0.065f) // >= 1.3 ms
+        return;
     if(lights && autoIndex)
         lights->indexLeft();
-    f_steerRight = false;
-    f_steerLeft = true;
+    steeringTargetPosition = target;
 }
 
-void Drive::steerRight() {
+void Drive::steerRight(float target) {
+    if(target <= 0.065f) // <= 1.3 ms
+        return;
     if(lights && autoIndex)
         lights->indexRight();
-    f_steerLeft = false;
-    f_steerRight = true;
+    steeringTargetPosition = target;
 }
 
 void Drive::steerStraight() {
     if(lights && autoIndex)
         lights->indexOff();
-    f_steerLeft = false;
-    f_steerRight = false;
+    steeringTargetPosition = 0.065f; // 1.3 ms
 }
 
 void Drive::setAutoIndex(bool autoIndex) {

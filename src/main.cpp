@@ -136,10 +136,9 @@ int main() {
 
     // előre: PTD0 / D10
     // hátra: PTD1 / D13
-    // balra: PTD2 / D11
-    // jobbra: PTD3 / D12
+    // kormány: PTD2 / D11
     // passing lights, thus turning on automatic index and reversing lights
-    drive = new Drive(PTD0, PTD1, PTD2, PTD3, lights);
+    drive = new Drive(PTD0, PTD1, PTD2, lights);
 
     // simple demo of autonomous operation (currently sensorless, timing based)
     demo = new Demo(drive, lights);

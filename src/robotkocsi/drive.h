@@ -7,14 +7,14 @@
 class Drive {
 public:
     Drive();
-    Drive(PinName pF, PinName pB, PinName pL, PinName pR, Lights* lights=NULL);
+    Drive(PinName pF, PinName pB, PinName pS, Lights* lights=NULL);
     ~Drive();
     
     void forward();
     void backward();
     void stop();
-    void steerLeft();
-    void steerRight();
+    void steerLeft(float target = 0.057f); // 1.14 ms
+    void steerRight(float target = 0.073f); // 1.46 ms
     void steerStraight();
     
     void setAutoIndex(bool autoIndex);
@@ -22,13 +22,11 @@ public:
 private:
     bool f_forward;
     bool f_backward;
-    bool f_steerLeft;
-    bool f_steerRight;
+    float steeringTargetPosition;
 
     PwmOut* po_forward;
     PwmOut* po_backward;
-    PwmOut* po_steerLeft;
-    PwmOut* po_steerRight;
+    PwmOut* po_steering;
     Lights* lights;
     bool autoIndex;
 
