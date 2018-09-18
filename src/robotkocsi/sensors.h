@@ -4,12 +4,10 @@
 #include "mbed.h"
 #include <FunctionPointer.h>
 #define MAX_NUM_SENS 10
-#define SENS_VBATTS1 0
-#define SENS_VBATTS2 1
-#define SENS_VBATTS3 2
-#define SENS_VBATT 3
-#define SENS_VMOTOR 4
-#define SENS_VLOGIC 5
+#define SENS_VBATT 0
+//#define SENS_VSERVO 1
+#define SENS_VMC 1
+#define SENS_VLOGIC 2
 
 
 class Sensors;
@@ -43,12 +41,10 @@ public:
     AnalogIn* getAnalogIn(int aiId);
 
 private:
-    void createS1();
-    void createS2();
-    void createS3();
-    void createVB();
-    void createVM();
-    void createVL();
+    void createVBatt();
+//    void createVServo();
+    void createV33();
+    void createVLogic();
     
     Sensor sensArr[MAX_NUM_SENS];
     int sensNum;

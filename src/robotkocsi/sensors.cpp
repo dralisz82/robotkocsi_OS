@@ -50,12 +50,10 @@ Sensors::Sensors() {
     analogInputs[5] = new AnalogIn(PTC10);
     
     sensNum = 0;
-    createS1();
-    createS2();
-    createS3();
-    createVB();
-    createVM();
-    createVL();
+    createVBatt();
+//    createVServo();
+    createV33();
+    createVLogic();
 }
 
 Sensors::~Sensors() {
@@ -64,16 +62,14 @@ Sensors::~Sensors() {
 }
 
 Sensor* Sensors::getSensor(char *sId) {
-    if(!strcmp(sId, "vBattS1"))
-        return &sensArr[SENS_VBATTS1];
-    else if(!strcmp(sId, "vBattS2"))
-        return &sensArr[SENS_VBATTS2];
-    else if(!strcmp(sId, "vBattS3"))
-        return &sensArr[SENS_VBATTS3];
-    else if(!strcmp(sId, "vBatt"))
+    if(!strcmp(sId, "vBatt"))
         return &sensArr[SENS_VBATT];
+//    else if(!strcmp(sId, "vServo"))
+//        return &sensArr[SENS_VSERVO];
+    else if(!strcmp(sId, "vMC"))
+        return &sensArr[SENS_VMC];
     else if(!strcmp(sId, "vMotor"))
-        return &sensArr[SENS_VMOTOR];
+        return &sensArr[SENS_VBATT];
     else if(!strcmp(sId, "vLogic"))
         return &sensArr[SENS_VLOGIC];
     return NULL;
@@ -85,80 +81,44 @@ AnalogIn* Sensors::getAnalogIn(int aiId) {
     return NULL;
 }
 
-float readS1() {
-    float factor = 3.3;// TODO
+float readVBatt() {
+    float factor = 3.3 * 8.25;    // Adjusted value of theoretical: 3.3V * 115k / 15k
     return sensors->getAnalogIn(0)->read()*factor;
 }
 
-void Sensors::createS1() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vBattS1");
-    s->setName("battery cell #1 voltage");
-    s->setMetric("V");
-    s->setFunction(readS1);
-}
-
-float readS2() {
-    float factor = 3.3;// TODO
-    return (sensors->getAnalogIn(1)->read() - sensors->getAnalogIn(0)->read())*factor;
-}
-
-void Sensors::createS2() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vBattS2");
-    s->setName("battery cell #2 voltage");
-    s->setMetric("V");
-    s->setFunction(readS2);
-}
-
-float readS3() {
-    float factor = 3.3;// TODO
-    return (sensors->getAnalogIn(2)->read() - sensors->getAnalogIn(1)->read())*factor;
-}
-
-void Sensors::createS3() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vBattS3");
-    s->setName("battery cell #3 voltage");
-    s->setMetric("V");
-    s->setFunction(readS3);
-}
-
-float readVB() {
-    float factor = 3.3;// TODO
-    return sensors->getAnalogIn(2)->read()*factor;
-}
-
-void Sensors::createVB() {
+void Sensors::createVBatt() {
     Sensor *s = &sensArr[sensNum++];
     s->setId("vBatt");
     s->setName("battery voltage");
     s->setMetric("V");
-    s->setFunction(readVB);
+    s->setFunction(readVBatt);
 }
 
-float readVM() {
-    float factor = 3.3;// TODO
-    return sensors->getAnalogIn(3)->read()*factor;
+//float readVServo() {
+float readV33() {
+//    float factor = 3.3 * 2; // Adjusted value of theoretical: 3.3V * 94k / 47k
+    float factor = 3.3; // Using it temporarily to measure 3.3 V supply of controller
+    return sensors->getAnalogIn(1)->read()*factor;
 }
 
-void Sensors::createVM() {
+//void Sensors::createVServo() {
+void Sensors::createV33() {
     Sensor *s = &sensArr[sensNum++];
-    s->setId("vMotor");
-    s->setName("motor voltage");
+    s->setId("vMC");
+    s->setName("uC voltage");
     s->setMetric("V");
-    s->setFunction(readVM);
+    s->setFunction(readV33);
 }
 
-float readVL() {
-    float factor = 3.3;// TODO
-    return sensors->getAnalogIn(4)->read()*factor;
+float readVLogic() {
+    float factor = 3.3 * 2.08; // Adjusted value of theoretical: 3.3V * 94k / 47k
+    return sensors->getAnalogIn(2)->read()*factor;
 }
 
-void Sensors::createVL() {
+void Sensors::createVLogic() {
     Sensor *s = &sensArr[sensNum++];
     s->setId("vLogic");
     s->setName("logic voltage");
     s->setMetric("V");
-    s->setFunction(readVL);
+    s->setFunction(readVLogic);
 }
