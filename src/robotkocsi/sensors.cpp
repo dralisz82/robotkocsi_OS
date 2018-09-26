@@ -50,6 +50,8 @@ Sensors::Sensors() {
     analogInputs[5] = new AnalogIn(PTC10);
     
     sensNum = 0;
+
+    // create sensor objects
     createVBatt();
 //    createVServo();
     createV33();

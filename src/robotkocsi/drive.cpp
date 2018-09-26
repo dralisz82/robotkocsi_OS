@@ -44,6 +44,9 @@ void Drive::controlThread_main(void const *argument) {
     float steeringServoPosition = 0.065f; // 1.3 ms
     bool steeringDebug = false;
 
+    // center steering
+    self->po_steering->write(steeringServoPosition);
+
     // 50 Hz control loop
     while (true) {
         // main drive control
@@ -52,8 +55,8 @@ void Drive::controlThread_main(void const *argument) {
             if(forwardPower < 0.1f)
                 forwardPower = 1.0f;  // initial torque
             else {
-                if(forwardPower > 0.5f)
-                    forwardPower -= 0.01f; // decreasing torque to a constant 50%
+                if(forwardPower > 0.4f)
+                    forwardPower -= 0.005f; // decreasing torque to a constant 40%
             }
         } else
             forwardPower = 0.0f;
@@ -62,8 +65,8 @@ void Drive::controlThread_main(void const *argument) {
             if(backwardPower < 0.1f)
                 backwardPower = 1.0f;  // initial torque
             else {
-                if(backwardPower > 0.8f)
-                    backwardPower -= 0.002f; // decreasing torque to a constant 80%
+                if(backwardPower > 0.9f)
+                    backwardPower -= 0.001f; // decreasing torque to a constant 90%
             }
         } else
             backwardPower = 0.0f;
@@ -84,8 +87,8 @@ void Drive::controlThread_main(void const *argument) {
                 steeringServoPosition -= 0.001f;
             if(steeringDebug)
                 printf("Steering position (target and actual): %f, %f\n", self->steeringTargetPosition, steeringServoPosition);
+            self->po_steering->write(steeringServoPosition);
         }
-        self->po_steering->write(steeringServoPosition);
 
         Thread::wait(20);   // 50 Hz
     }
