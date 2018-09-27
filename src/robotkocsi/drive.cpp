@@ -10,6 +10,7 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
     
     this->lights = lights;
     autoIndex = (lights)?true:false;
+    enabled = true;
     
     po_forward->period(0.0001); // 10kHz
     po_backward->period(0.0001); // 10kHz
@@ -95,6 +96,8 @@ void Drive::controlThread_main(void const *argument) {
 }
 
 void Drive::forward() {
+    if(!enabled)
+        return;
     if(lights)
         lights->reversingLightOff();
     f_backward = false;
@@ -102,6 +105,8 @@ void Drive::forward() {
 }
 
 void Drive::backward() {
+    if(!enabled)
+        return;
     if(lights)
         lights->reversingLightOn();
     f_forward = false;
@@ -116,6 +121,8 @@ void Drive::stop() {
 }
 
 void Drive::steerLeft(float target) {
+    if(!enabled)
+        return;
     if(target >= 0.065f) // >= 1.3 ms
         return;
     if(lights && autoIndex)
@@ -124,6 +131,8 @@ void Drive::steerLeft(float target) {
 }
 
 void Drive::steerRight(float target) {
+    if(!enabled)
+        return;
     if(target <= 0.065f) // <= 1.3 ms
         return;
     if(lights && autoIndex)
@@ -139,4 +148,13 @@ void Drive::steerStraight() {
 
 void Drive::setAutoIndex(bool autoIndex) {
     this->autoIndex = autoIndex;
+}
+
+void Drive::setEnabled(bool enabled) {
+    this->enabled = enabled;
+    if(!enabled) {
+        printf("Disabling drive...\n");
+        stop();
+        steerStraight();
+    }
 }

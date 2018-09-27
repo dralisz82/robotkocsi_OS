@@ -73,15 +73,38 @@ void execCommand(char *cmd, int argc, simplestr *args) {
     printf("%s %d; %s, %s, %s, %s\n", cmd, argc, args[0], args[1], args[2], args[3]);
 }
 
+void checkBattery() {
+    Sensor *s = sensors->getSensor("vBatt");
+    printf("Checking battery...");
+    if(s == NULL) {
+        printf("[error]\n");
+        return;
+    }
+    if(s->readValue() < 10.2f) {
+        printf("[low]\n");
+        drive->setEnabled(false);
+        lights->hazardLightsOn();
+        // TODO change heartbeat led color to red (and command exec led to blue)
+        BT.printf("Battery low, drive disabled.\n");
+    } else {
+        printf("[ok]\n");
+    }
+}
+    
 /**
  * Heartbeat thread main loop
  */
 void hbThreadMain(void const *argument) {
+    int timer = 0;
     while (true) {
         heartbeatLED = 0;
         Thread::wait(100);
         heartbeatLED = 1;
         Thread::wait(1900);
+        
+        if(timer % 30 == 0)
+            checkBattery(); // once in every 60 seconds
+        timer++;
     }
 }
 

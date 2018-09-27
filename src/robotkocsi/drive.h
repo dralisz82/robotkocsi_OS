@@ -16,8 +16,8 @@ public:
     void steerLeft(float target = 0.057f); // 1.14 ms
     void steerRight(float target = 0.073f); // 1.46 ms
     void steerStraight();
-    
     void setAutoIndex(bool autoIndex);
+    void setEnabled(bool enabled);
 
 private:
     bool f_forward;
@@ -29,6 +29,7 @@ private:
     PwmOut* po_steering;
     Lights* lights;
     bool autoIndex;
+    bool enabled;
 
     Thread *controlThread;
     static void controlThread_main(void const *argument);
