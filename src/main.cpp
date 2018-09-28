@@ -7,8 +7,10 @@
 #include "robotkocsi/demo.h"
 
 
-DigitalOut heartbeatLED(LED_GREEN);
-DigitalOut cmdExecLED(LED_RED);
+DigitalOut *heartbeatLED;
+DigitalOut normalLED(LED_GREEN);
+DigitalOut errorLED(LED_RED);
+DigitalOut cmdExecLED(LED_BLUE);
 
 Lights* lights;
 Drive* drive;
@@ -84,10 +86,19 @@ void checkBattery() {
         printf("[low]\n");
         drive->setEnabled(false);
         lights->hazardLightsOn();
-        // TODO change heartbeat led color to red (and command exec led to blue)
+        normalLED = 1;  // off
+        heartbeatLED = &errorLED;
         BT.printf("Battery low, drive disabled.\n");
     } else {
         printf("[ok]\n");
+    }
+    if(s->readValue() > 11.2f) {
+        if(drive->setEnabled(true)) {
+            lights->hazardLightsOff();
+            errorLED = 1;   // off
+            heartbeatLED = &normalLED;
+            BT.printf("Battery charged, drive enabled.\n");
+        }
     }
 }
     
@@ -96,10 +107,11 @@ void checkBattery() {
  */
 void hbThreadMain(void const *argument) {
     int timer = 0;
+    heartbeatLED = &normalLED;
     while (true) {
-        heartbeatLED = 0;
+        *heartbeatLED = 0;  // on
         Thread::wait(100);
-        heartbeatLED = 1;
+        *heartbeatLED = 1;  // off
         Thread::wait(1900);
         
         if(timer % 30 == 0)
@@ -143,7 +155,10 @@ int main() {
     printf("OS Started\n");
 
     // Init peripherals
-    heartbeatLED = 1;
+    
+    // LEDs have inverse logic
+    normalLED = 1;
+    errorLED = 1;
     cmdExecLED = 1;
 
     BT.baud(9600); // HC-05 module works at this rate by default
@@ -158,10 +173,10 @@ int main() {
     lights = new Lights(PTA1, PTB9, PTC3, PTC2, PTB23, PTA2);
 
     // előre: PTD0 / D10
-    // hátra: PTD1 / D13
-    // kormány: PTD2 / D11
+    // hátra: PTD2 / D11
+    // kormány: PTC4 / D9
     // passing lights, thus turning on automatic index and reversing lights
-    drive = new Drive(PTD0, PTD1, PTD2, lights);
+    drive = new Drive(PTD0, PTD2, PTC4, lights);
 
     // simple demo of autonomous operation (currently sensorless, timing based)
     demo = new Demo(drive, lights);

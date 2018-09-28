@@ -4,6 +4,10 @@
 #include "mbed.h"
 #include "lights.h"
 
+#define steerMaxLeft    0.058f
+#define steerMaxRight   0.075f
+#define steerCenter     0.0665f
+
 class Drive {
 public:
     Drive();
@@ -13,11 +17,11 @@ public:
     void forward();
     void backward();
     void stop();
-    void steerLeft(float target = 0.057f); // 1.14 ms
-    void steerRight(float target = 0.073f); // 1.46 ms
+    void steerLeft(float target = steerMaxLeft); // 1.16 ms
+    void steerRight(float target = steerMaxRight); // 1.50 ms
     void steerStraight();
     void setAutoIndex(bool autoIndex);
-    void setEnabled(bool enabled);
+    bool setEnabled(bool enabled);
 
 private:
     bool f_forward;
