@@ -56,6 +56,7 @@ Sensors::Sensors() {
 //    createVServo();
     createV33();
     createVLogic();
+    createTempSens();
 }
 
 Sensors::~Sensors() {
@@ -74,6 +75,10 @@ Sensor* Sensors::getSensor(char *sId) {
         return &sensArr[SENS_VBATT];
     else if(!strcmp(sId, "vLogic"))
         return &sensArr[SENS_VLOGIC];
+    else if(!strcmp(sId, "tAmbient"))
+        return &sensArr[SENS_TEMP1];
+    else if(!strcmp(sId, "tPS"))
+        return &sensArr[SENS_TEMP2];
     return NULL;
 }
 
@@ -124,3 +129,54 @@ void Sensors::createVLogic() {
     s->setMetric("V");
     s->setFunction(readVLogic);
 }
+
+DS1820* Sensors::getTempProbe(int pId) {
+    return ds1820Probe[pId];
+}
+
+float readTemp1() {
+    return sensors->getTempProbe(0)->temperature('c');
+}
+
+float readTemp2() {
+    return sensors->getTempProbe(1)->temperature('c');
+}
+
+void Sensors::convertTemperature(bool wait) {
+    if(ds1820SearchingDone)
+        ds1820Probe[0]->convertTemperature(wait, DS1820::all_devices);
+}
+
+void Sensors::createTempSens() {
+    int i, devices_found = 0;
+    ds1820SearchingDone = false;
+    
+    // Initialize the probe array to DS1820 objects
+    while(DS1820::unassignedProbe(PTC12)) {
+        ds1820Probe[devices_found] = new DS1820(PTC12);
+        devices_found++;
+        if (devices_found == MAX_NUM_DS)
+            break;
+    }
+    
+    printf("%d DS1820  probes found.\n", devices_found);
+    ds1820SearchingDone = true;
+    
+    ds1820Probe[0]->convertTemperature(true, DS1820::all_devices);
+    printf("Temperature converted.\n");
+    for(i=0;i<devices_found;i++)
+        printf("Temperature %d: %f°C\n", i, ds1820Probe[i]->temperature('c'));
+  
+    Sensor *s = &sensArr[sensNum++];
+    s->setId("Temp1");
+    s->setName("ambient temperature");
+    s->setMetric("°C");
+    s->setFunction(readTemp1);
+    
+    s = &sensArr[sensNum++];
+    s->setId("Temp2");
+    s->setName("power supply temperature");
+    s->setMetric("°C");
+    s->setFunction(readTemp2);
+}
+

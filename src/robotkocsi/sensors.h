@@ -3,9 +3,12 @@
 
 #include "mbed.h"
 #include <FunctionPointer.h>
-#define MAX_NUM_SENS 10
+#include "DS1820.h"
 
-enum SensorID { SENS_VBATT, SENS_VMC, SENS_VLOGIC };
+#define MAX_NUM_SENS 10
+#define MAX_NUM_DS  5
+
+enum SensorID { SENS_VBATT, SENS_VMC, SENS_VLOGIC, SENS_TEMP1, SENS_TEMP2 };
 
 class Sensors;
 
@@ -36,17 +39,23 @@ public:
     ~Sensors();
     Sensor* getSensor(char *sId);
     AnalogIn* getAnalogIn(int aiId);
+    DS1820* getTempProbe(int pId);
+    void convertTemperature(bool wait = false);
 
 private:
     void createVBatt();
 //    void createVServo();
     void createV33();
     void createVLogic();
+    void createTempSens();
     
     Sensor sensArr[MAX_NUM_SENS];
     int sensNum;
     
     AnalogIn* analogInputs[6];
+
+    DS1820* ds1820Probe[MAX_NUM_DS];
+    bool ds1820SearchingDone;
 };
     
 #endif
