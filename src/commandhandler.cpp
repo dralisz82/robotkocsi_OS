@@ -26,19 +26,15 @@ void gotChar() {
     if(c == '\n' || bt_rb_pos == BT_RB_SIZE) {    // if EOL or buffer is full...
         if(bt_rb_pos == BT_RB_SIZE)
             bt_receive_buffer[BT_RB_SIZE - 1] = '\0'; // Better would be some error handling here
-        cmdExecLED = 0;
+        cmdExecLED = 0; // turn on command execution LED
         mail = cmdMailBox.alloc(2); // 2 ms timeout
         if(mail != NULL) {
             strcpy(*mail, bt_receive_buffer);
-            cmdMailBox.put(mail);
-//        handleCommand();
+            cmdMailBox.put(mail); // sending command to handleCommand() via mailbox
         }
         bt_rb_pos = 0;
     }
 
-    // interpret received character as a command to switch color
-//    if(c == 'r' || c == 'g' || c == 'b')
-//        color = c;
 }
 
 // Note: This function returns a pointer to a substring of the original string.
@@ -76,7 +72,7 @@ void handleCommand() {
     char args[4][BT_RB_SIZE] = {0};
     int argIdx = 0;
 
-    osEvent evt = cmdMailBox.get();
+    osEvent evt = cmdMailBox.get(); // receiving command from UART Interrupt handler
     if (evt.status != osEventMail)
         return;
     
@@ -102,7 +98,7 @@ void handleCommand() {
 
     cmdMailBox.free(mail);
     execCommand(cmd, argIdx, args);
-    cmdExecLED = 1;
+    cmdExecLED = 1; // turn off command execution LED
 }
 
 void cmdHandlerMain(void const *argument) {

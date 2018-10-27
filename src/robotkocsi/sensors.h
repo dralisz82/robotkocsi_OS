@@ -4,11 +4,8 @@
 #include "mbed.h"
 #include <FunctionPointer.h>
 #define MAX_NUM_SENS 10
-#define SENS_VBATT 0
-//#define SENS_VSERVO 1
-#define SENS_VMC 1
-#define SENS_VLOGIC 2
 
+enum SensorID { SENS_VBATT, SENS_VMC, SENS_VLOGIC };
 
 class Sensors;
 

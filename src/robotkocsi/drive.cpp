@@ -19,7 +19,7 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
     // initialize variables
     f_forward = false;
     f_backward = false;
-    steeringTargetPosition = steerCenter; // 1.33 ms
+    steeringTargetPosition = steerCenter;
     
     controlThread = new Thread(controlThread_main, this);
 
@@ -42,7 +42,7 @@ void Drive::controlThread_main(void const *argument) {
     float backwardPower = 0.0f;
     bool motorDebug = false;
     
-    float steeringServoPosition = steerCenter; // 1.33 ms
+    float steeringServoPosition = steerCenter;
     bool steeringDebug = false;
 
     // center steering
@@ -123,7 +123,7 @@ void Drive::stop() {
 void Drive::steerLeft(float target) {
     if(!enabled)
         return;
-    if(target >= steerCenter) // >= 1.33 ms
+    if(target >= steerCenter)
         return;
     if(lights && autoIndex)
         lights->indexLeft();
@@ -133,7 +133,7 @@ void Drive::steerLeft(float target) {
 void Drive::steerRight(float target) {
     if(!enabled)
         return;
-    if(target <= steerCenter) // <= 1.33 ms
+    if(target <= steerCenter)
         return;
     if(lights && autoIndex)
         lights->indexRight();
@@ -143,7 +143,7 @@ void Drive::steerRight(float target) {
 void Drive::steerStraight() {
     if(lights && autoIndex)
         lights->indexOff();
-    steeringTargetPosition = steerCenter; // 1.33 ms
+    steeringTargetPosition = steerCenter;
 }
 
 void Drive::setAutoIndex(bool autoIndex) {

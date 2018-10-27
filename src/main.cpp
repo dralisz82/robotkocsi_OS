@@ -20,7 +20,6 @@ Demo* demo;
 Serial BT(PTC15, PTC14);  // Bluetooth module header
 
 Thread *hbThread;  // heartbeat thread
-//Thread *nw_thread;  // responsible for ethernet network
 extern Thread* cmdHandlerThread;
 
 void execCommand(char *cmd, int argc, simplestr *args) {
@@ -121,36 +120,6 @@ void hbThreadMain(void const *argument) {
 }
 
 
-/**
- * Network thread main loop
- */
-/*void nw_thread_main(void const *argument) {
-    EthernetInterface eth;
-    eth.init(); //Use DHCP
-    eth.connect();
-    printf("IP Address is %s\n", eth.getIPAddress());
-    
-    TCPSocketConnection sock;
-    sock.connect("mbed.org", 80);
-    
-    char http_cmd[] = "GET /media/uploads/mbed_official/hello.txt HTTP/1.0\n\n";
-    sock.send_all(http_cmd, sizeof(http_cmd)-1);
-    
-    char buffer[300];
-    int ret;
-    while (true) {
-        ret = sock.receive(buffer, sizeof(buffer)-1);
-        if (ret <= 0)
-            break;
-        buffer[ret] = '\0';
-        printf("Received %d chars from server:\n%s\n", ret, buffer);
-    }
-      
-    sock.close();
-    
-    eth.disconnect();
-}*/
-
 int main() {
     printf("OS Started\n");
 
@@ -187,7 +156,6 @@ int main() {
     printf("Starting threads\n");
     
     hbThread = new Thread(hbThreadMain);
-//    nw_thread = new Thread(nw_thread_main);
     cmdHandlerThread = new Thread(cmdHandlerMain);
     
     // main control loop
