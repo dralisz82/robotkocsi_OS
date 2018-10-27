@@ -115,8 +115,11 @@ void hbThreadMain(void const *argument) {
         
         if(timer % 30 == 0)
             checkBattery(); // once in every 60 seconds
-        if(timer % 5 == 0)
-            sensors->convertTemperature(false);   // once in every 10 seconds
+        if(timer % 5 == 0) {
+            // once in every 10 seconds
+            //sensors->convertTemperature(false); // TODO: fix "Mutex lock failed", then uncomment
+            printf("Odometry count: %d\n", sensors->readOdo());
+        }
         timer++;
     }
 }

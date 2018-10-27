@@ -57,6 +57,7 @@ Sensors::Sensors() {
     createV33();
     createVLogic();
     createTempSens();
+    createOdometry();
 }
 
 Sensors::~Sensors() {
@@ -79,6 +80,8 @@ Sensor* Sensors::getSensor(char *sId) {
         return &sensArr[SENS_TEMP1];
     else if(!strcmp(sId, "tPS"))
         return &sensArr[SENS_TEMP2];
+    else if(!strcmp(sId, "odo"))
+        return &sensArr[SENS_ODO];
     return NULL;
 }
 
@@ -178,5 +181,33 @@ void Sensors::createTempSens() {
     s->setName("power supply temperature");
     s->setMetric("°C");
     s->setFunction(readTemp2);
+}
+
+void Sensors::incOdo() {
+    odoCount++;
+}
+
+int Sensors::readOdo() {
+    return odoCount;
+}
+
+void incrementOdo() {
+    sensors->incOdo();
+}
+
+float readOdometry() {
+    return sensors->readOdo();
+}
+
+void Sensors::createOdometry() {
+    hall = new InterruptIn(PTC16); // D0
+    odoCount = 0;
+    hall->rise(&incrementOdo);
+
+    Sensor *s = &sensArr[sensNum++];
+    s->setId("Odometry");
+    s->setName("Odometry");
+    s->setMetric("");
+    s->setFunction(readOdometry);
 }
 
