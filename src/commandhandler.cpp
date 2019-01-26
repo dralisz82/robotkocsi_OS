@@ -7,9 +7,9 @@ char bt_receive_buffer[BT_RB_SIZE];
 unsigned int bt_rb_pos = 0;
 
 Mail<simplestr, 16> cmdMailBox;
-Thread* cmdHandlerThread;
+Thread cmdHandlerThread;
 
-extern Serial BT;
+extern RawSerial BT;
 extern DigitalOut cmdExecLED;
 /**
  * UART Interrupt handler
@@ -77,12 +77,9 @@ void handleCommand() {
         return;
     
     simplestr *mail = (simplestr*)evt.value.p;
-    printf("cmd: %s\n", mail);
     trimmedCommand = trimwhitespace(*mail);
+    printf("cmd: >%s<\n", trimmedCommand);
 
-    printf("tcmd: >%s<\n", trimmedCommand);
-
-   
    /* get the first token */
    token = strtok(trimmedCommand, separator); // TODO: replace with strtok_r()
    
@@ -101,7 +98,7 @@ void handleCommand() {
     cmdExecLED = 1; // turn off command execution LED
 }
 
-void cmdHandlerMain(void const *argument) {
+void cmdHandlerMain(void) {
     printf("Command handler started\n");
     while(1) {
         handleCommand();

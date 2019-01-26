@@ -14,7 +14,7 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
     
     po_forward->period(0.0001); // 10kHz
     po_backward->period(0.0001); // 10kHz
-    po_steering->period(0.02); // 50Hz
+    po_steering->period(0.01); // 100Hz
 
     // initialize variables
     f_forward = false;
@@ -43,12 +43,13 @@ void Drive::controlThread_main(void const *argument) {
     bool motorDebug = false;
     
     float steeringServoPosition = steerCenter;
+    self->steeringStep = steeringNormStep;
     bool steeringDebug = false;
 
     // center steering
     self->po_steering->write(steeringServoPosition);
 
-    // 50 Hz control loop
+    // 100 Hz control loop
     while (true) {
         // main drive control
         if(self->f_forward) {
@@ -56,8 +57,8 @@ void Drive::controlThread_main(void const *argument) {
             if(forwardPower < 0.1f)
                 forwardPower = 1.0f;  // initial torque
             else {
-                if(forwardPower > 0.4f)
-                    forwardPower -= 0.005f; // decreasing torque to a constant 40%
+                if(forwardPower > 0.2f)
+                    forwardPower -= 0.05f; // decreasing torque to a constant 20%
             }
         } else
             forwardPower = 0.0f;
@@ -66,8 +67,8 @@ void Drive::controlThread_main(void const *argument) {
             if(backwardPower < 0.1f)
                 backwardPower = 1.0f;  // initial torque
             else {
-                if(backwardPower > 0.9f)
-                    backwardPower -= 0.001f; // decreasing torque to a constant 90%
+                if(backwardPower > 0.2f)
+                    backwardPower -= 0.05f; // decreasing torque to a constant 20%
             }
         } else
             backwardPower = 0.0f;
@@ -83,15 +84,15 @@ void Drive::controlThread_main(void const *argument) {
         if(fabs(self->steeringTargetPosition - steeringServoPosition) > 0.001f) {
             steeringDebug = true;
             if(self->steeringTargetPosition > steeringServoPosition)
-                steeringServoPosition += 0.001f;
+                steeringServoPosition += self->steeringStep;
             else
-                steeringServoPosition -= 0.001f;
+                steeringServoPosition -= self->steeringStep;
             if(steeringDebug)
                 printf("Steering position (target and actual): %f, %f\n", self->steeringTargetPosition, steeringServoPosition);
             self->po_steering->write(steeringServoPosition);
         }
 
-        Thread::wait(20);   // 50 Hz
+        Thread::wait(10);   // 100 Hz
     }
 }
 
@@ -120,7 +121,7 @@ void Drive::stop() {
     f_backward = false;
 }
 
-void Drive::steerLeft(float target) {
+void Drive::steerLeft(float target, float speed) {
     if(!enabled)
         return;
     if(target >= steerCenter)
@@ -128,9 +129,10 @@ void Drive::steerLeft(float target) {
     if(lights && autoIndex)
         lights->indexLeft();
     steeringTargetPosition = target;
+    steeringStep = speed;
 }
 
-void Drive::steerRight(float target) {
+void Drive::steerRight(float target, float speed) {
     if(!enabled)
         return;
     if(target <= steerCenter)
@@ -138,12 +140,14 @@ void Drive::steerRight(float target) {
     if(lights && autoIndex)
         lights->indexRight();
     steeringTargetPosition = target;
+    steeringStep = speed;
 }
 
-void Drive::steerStraight() {
+void Drive::steerStraight(float speed) {
     if(lights && autoIndex)
         lights->indexOff();
     steeringTargetPosition = steerCenter;
+    steeringStep = speed;
 }
 
 void Drive::setAutoIndex(bool autoIndex) {

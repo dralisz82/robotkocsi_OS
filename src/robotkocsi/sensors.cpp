@@ -42,12 +42,12 @@ float Sensor::readValue() {
 
 Sensors::Sensors() {
     // create peripheral objects
-    analogInputs[0] = new AnalogIn(PTB2);
-    analogInputs[1] = new AnalogIn(PTB3);
-    analogInputs[2] = new AnalogIn(PTB10);
-    analogInputs[3] = new AnalogIn(PTB11);
-    analogInputs[4] = new AnalogIn(PTC11);
-    analogInputs[5] = new AnalogIn(PTC10);
+    analogInputs[0] = new AnalogIn(PTB2); // A0
+    analogInputs[1] = new AnalogIn(PTB3); // A1
+    analogInputs[2] = new AnalogIn(PTB10); // A2
+    analogInputs[3] = new AnalogIn(PTB11); // A3
+    analogInputs[4] = new AnalogIn(PTC11); // A4
+    analogInputs[5] = new AnalogIn(PTC10); // A5
     
     sensNum = 0;
 
@@ -155,8 +155,8 @@ void Sensors::createTempSens() {
     ds1820SearchingDone = false;
     
     // Initialize the probe array to DS1820 objects
-    while(DS1820::unassignedProbe(PTC12)) {
-        ds1820Probe[devices_found] = new DS1820(PTC12);
+    while(DS1820::unassignedProbe(PTC12)) { // D8
+        ds1820Probe[devices_found] = new DS1820(PTC12); // D8
         devices_found++;
         if (devices_found == MAX_NUM_DS)
             break;

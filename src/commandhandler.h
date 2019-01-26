@@ -4,6 +4,6 @@
 typedef char simplestr[BT_RB_SIZE];
 
 void gotChar();
-void cmdHandlerMain(void const *argument);
+void cmdHandlerMain(void);
 void handleCommand();
 void execCommand(char *cmd, int argc, simplestr *args);

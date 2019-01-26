@@ -17,10 +17,10 @@ Drive* drive;
 Sensors* sensors;
 Demo* demo;
 
-Serial BT(PTC15, PTC14);  // Bluetooth module header
+RawSerial BT(PTC15, PTC14);  // Bluetooth module header
 
-Thread *hbThread;  // heartbeat thread
-extern Thread* cmdHandlerThread;
+Thread hbThread;  // heartbeat thread
+extern Thread cmdHandlerThread;
 
 void execCommand(char *cmd, int argc, simplestr *args) {
     if(!strcmp(cmd, "forward")) {
@@ -104,7 +104,7 @@ void checkBattery() {
 /**
  * Heartbeat thread main loop
  */
-void hbThreadMain(void const *argument) {
+void hbThreadMain(void) {
     int timer = 0;
     heartbeatLED = &normalLED;
     while (true) {
@@ -117,7 +117,7 @@ void hbThreadMain(void const *argument) {
             checkBattery(); // once in every 60 seconds
         if(timer % 5 == 0) {
             // once in every 10 seconds
-            //sensors->convertTemperature(false); // TODO: fix "Mutex lock failed", then uncomment
+            //sensors->convertTemperature(false); // TODO: improve DS18B20 lib robustness, then uncomment
             printf("Odometry count: %d\n", sensors->readOdo());
         }
         timer++;
@@ -160,8 +160,8 @@ int main() {
     
     printf("Starting threads\n");
     
-    hbThread = new Thread(hbThreadMain);
-    cmdHandlerThread = new Thread(cmdHandlerMain);
+    hbThread.start(callback(hbThreadMain));
+    cmdHandlerThread.start(callback(cmdHandlerMain));
     
     // main control loop
     while(1) {
