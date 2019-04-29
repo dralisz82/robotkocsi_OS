@@ -121,6 +121,7 @@ void hbThreadMain(void) {
     heartbeatLED = &normalLED;
     
     Sensor *s = sensors->getSensor("odo");
+    Sensor *s2 = sensors->getSensor("sonFront");
     
     while (true) {
         *heartbeatLED = 0;  // on
@@ -128,11 +129,13 @@ void hbThreadMain(void) {
         *heartbeatLED = 1;  // off
         Thread::wait(1900);
         
-        if(timer % 30 == 0)
-            checkBattery(); // once in every 60 seconds
-        if(timer % 5 == 0) {
+        if(timer % 30 == 0) // once in every 60 seconds
+            checkBattery();
+        if(timer % 5 == 0) // once in every 10 seconds
             printf("Odometry total distance: %f %s\n", s->readValue(), s->getMetric());
-            // once in every 10 seconds
+        if(timer % 1 == 0) { // once in every 2 seconds
+            printf("Front sonar distance: %f %s\n", s2->readValue(), s2->getMetric());
+            printf("Speed: %f %s\n", s->readValue(Odometry::CurrentSpeed), s->getMetric(Odometry::CurrentSpeed));
             //sensors->convertTemperature(false); // TODO: improve DS18B20 lib robustness, then uncomment
         }
         timer++;

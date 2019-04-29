@@ -2,6 +2,7 @@
 #include "voltagesensor.h"
 #include "temperaturesensor.h"
 #include "odometry.h"
+#include "sonar.h"
 
 extern Sensors* sensors;
 
@@ -63,6 +64,8 @@ Sensors::Sensors() {
     addSensor(new TemperatureSensor("Temp1", "ambient temperature", "°C", 0));
     addSensor(new TemperatureSensor("Temp2", "power supply temperature", "°C", 1));
     addSensor(new Odometry("Odo", "odometry", "cm"));
+    addSensor(new Sonar("sonFront", "front sonar", "cm", PTD3, PTD1));  // trigger: D12, echo: D13
+    ((Sonar*)sensArr[SENS_SONAR])->start();
 }
 
 Sensors::~Sensors() {
@@ -96,6 +99,8 @@ Sensor* Sensors::getSensor(char *sId) {
         return sensArr[SENS_TEMP2];
     else if(!strcmp(sId, "odo"))
         return sensArr[SENS_ODO];
+    else if(!strcmp(sId, "sonFront"))
+        return sensArr[SENS_SONAR];
     return NULL;
 }
 
