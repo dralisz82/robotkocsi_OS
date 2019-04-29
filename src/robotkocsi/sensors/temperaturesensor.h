@@ -11,9 +11,9 @@ class TemperatureSensor : public Sensor {
 public:
     TemperatureSensor(char *sId, char *name, char *metric, int probeId) : Sensor(sId, name, metric), probeId(probeId) { init(); }
     void init();
+    virtual float readValue(unsigned int readingId = 0);
     void convertTemperature(bool wait = false);
     DS1820* getTempProbe(int probeId);
-    virtual float readValue();
 
 private:
     int probeId;

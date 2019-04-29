@@ -20,35 +20,29 @@ Sensor::Sensor(char *sId, char *name, char *metric) {
 Sensor::~Sensor() {
 }
 
-void Sensor::setId(char *sId) {
-    strncpy(this->sId, sId, SENSORIDLEN);
-    this->name[SENSORIDLEN-1] = '\0';
-}
-
-void Sensor::setName(char *name) {
+void Sensor::setReadingName(char *name, unsigned int readingId) {
     strncpy(this->name, name, SENSORNAMELEN);
     this->name[SENSORNAMELEN-1] = '\0';
-}
-
-void Sensor::setMetric(char *metric) {
-    strncpy(this->metric, metric, SENSORMETRICLEN);
-    this->name[SENSORMETRICLEN-1] = '\0';
 }
 
 char* Sensor::getId() {
     return sId;
 }
 
-char* Sensor::getName() {
+char* Sensor::getReadingName(unsigned int readingId) {
     return name;
 }
 
-char* Sensor::getMetric() {
+char* Sensor::getMetric(unsigned int readingId) {
     return metric;
 }
 
-float Sensor::readValue() {
+float Sensor::readValue(unsigned int readingId) {
     return 0.0f;
+}
+
+unsigned int Sensor::getNumberOfReadings() {
+    return 1;
 }
 
 Sensors::Sensors() {

@@ -2,6 +2,6 @@
 
 extern Sensors* sensors;
 
-float VoltageSensor::readValue() {
+float VoltageSensor::readValue(unsigned int readingId) {
     return sensors->getAnalogIn(0)->read() * factor;
 }

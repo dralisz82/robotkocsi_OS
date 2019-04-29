@@ -17,16 +17,15 @@ public:
     Sensor();
     Sensor(char *sId, char *name, char *metric);
     ~Sensor();
-    void setId(char *sId);
-    void setName(char *name);
-    void setMetric(char *metric);
     char* getId();
-    char* getName();
-    char* getMetric();
-    virtual float readValue();
+    virtual void setReadingName(char *name, unsigned int readingId = 0);
+    virtual char* getReadingName(unsigned int readingId = 0);
+    virtual char* getMetric(unsigned int readingId = 0);
+    virtual float readValue(unsigned int readingId = 0);
+    virtual unsigned int getNumberOfReadings();
 //    char* stringData();
     
-private:
+protected:
     char sId[SENSORIDLEN];
     char name[SENSORNAMELEN];
     char metric[SENSORMETRICLEN]; // max 3 characters + terminating 0

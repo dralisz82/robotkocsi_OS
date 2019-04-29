@@ -4,6 +4,7 @@
 #include "robotkocsi/drive.h"
 #include "robotkocsi/lights.h"
 #include "robotkocsi/sensors.h"
+#include "robotkocsi/sensors/odometry.h"
 #include "robotkocsi/demo.h"
 
 
@@ -64,8 +65,11 @@ void execCommand(char *cmd, int argc, simplestr *args) {
     }
     else if(!strcmp(cmd, "readSensor")) {
         Sensor *s = sensors->getSensor(args[0]);
+        int rID = 0;
         if(s != NULL) {
-            BT.printf("%s: %f %s\n", s->getName(), s->readValue(), s->getMetric());
+            if(argc > 1)
+                rID = atoi(args[1]);
+            BT.printf("%s: %f %s\n", s->getReadingName(rID), s->readValue(rID), s->getMetric(rID));
         }
     }
     else {

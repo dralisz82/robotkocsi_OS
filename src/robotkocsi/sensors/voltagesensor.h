@@ -7,7 +7,7 @@ class VoltageSensor : public Sensor {
 
 public:
     VoltageSensor(char *sId, char *name, char *metric, int aiId, float factor) : Sensor(sId, name, metric), aiId(aiId), factor(factor) {}
-    virtual float readValue();
+    virtual float readValue(unsigned int readingId = 0);
     
 private:
     int aiId;

@@ -31,6 +31,6 @@ DS1820* TemperatureSensor::getTempProbe(int probeId) {
 //    return ds1820Probe[probeId];
 }
 
-float TemperatureSensor::readValue() {
+float TemperatureSensor::readValue(unsigned int readingId) {
     return getTempProbe(probeId)->temperature('c');
 }
