@@ -34,7 +34,6 @@ void gotChar() {
         }
         bt_rb_pos = 0;
     }
-
 }
 
 // Note: This function returns a pointer to a substring of the original string.
@@ -74,24 +73,24 @@ void handleCommand() {
 
     osEvent evt = cmdMailBox.get(); // receiving command from UART Interrupt handler
     if (evt.status != osEventMail)
-        return;
+      return;
     
     simplestr *mail = (simplestr*)evt.value.p;
     trimmedCommand = trimwhitespace(*mail);
     printf("cmd: >%s<\n", trimmedCommand);
-
-   /* get the first token */
-   token = strtok(trimmedCommand, separator); // TODO: replace with strtok_r()
-   
-   if(token == NULL)
-    return;
     
-   strcpy(cmd, token);
-   
-   /* walk through arguments */
-   while( (token = strtok(NULL, separator)) != NULL ) {
+    /* get the first token */
+    token = strtok(trimmedCommand, separator); // TODO: replace with strtok_r()
+    
+    if(token == NULL)
+      return;
+    
+    strcpy(cmd, token);
+    
+    /* walk through arguments */
+    while( (token = strtok(NULL, separator)) != NULL ) {
       strcpy(args[argIdx++], token);
-   }
+    }
 
     cmdMailBox.free(mail);
     execCommand(cmd, argIdx, args);

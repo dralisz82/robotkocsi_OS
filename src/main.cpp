@@ -107,6 +107,9 @@ void checkBattery() {
 void hbThreadMain(void) {
     int timer = 0;
     heartbeatLED = &normalLED;
+    
+    Sensor *s = sensors->getSensor("odo");
+    
     while (true) {
         *heartbeatLED = 0;  // on
         Thread::wait(100);
@@ -116,9 +119,9 @@ void hbThreadMain(void) {
         if(timer % 30 == 0)
             checkBattery(); // once in every 60 seconds
         if(timer % 5 == 0) {
+            printf("Odometry total distance: %f %s\n", s->readValue(), s->getMetric());
             // once in every 10 seconds
             //sensors->convertTemperature(false); // TODO: improve DS18B20 lib robustness, then uncomment
-            printf("Odometry count: %d\n", sensors->readOdo());
         }
         timer++;
     }

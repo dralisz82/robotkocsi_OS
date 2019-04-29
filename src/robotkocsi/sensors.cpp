@@ -1,27 +1,38 @@
 #include "sensors.h"
+#include "voltagesensor.h"
+#include "temperaturesensor.h"
+#include "odometry.h"
 
 extern Sensors* sensors;
 
 Sensor::Sensor() {
 }
 
+Sensor::Sensor(char *sId, char *name, char *metric) {
+    strncpy(this->sId, sId, SENSORIDLEN);
+    this->name[SENSORIDLEN-1] = '\0';
+    strncpy(this->name, name, SENSORNAMELEN);
+    this->name[SENSORNAMELEN-1] = '\0';
+    strncpy(this->metric, metric, SENSORMETRICLEN);
+    this->name[SENSORMETRICLEN-1] = '\0';
+}
+
 Sensor::~Sensor() {
 }
 
 void Sensor::setId(char *sId) {
-    strcpy(this->sId, sId);
+    strncpy(this->sId, sId, SENSORIDLEN);
+    this->name[SENSORIDLEN-1] = '\0';
 }
 
 void Sensor::setName(char *name) {
-    strcpy(this->name, name);
+    strncpy(this->name, name, SENSORNAMELEN);
+    this->name[SENSORNAMELEN-1] = '\0';
 }
 
 void Sensor::setMetric(char *metric) {
-    strcpy(this->metric, metric);
-}
-
-void Sensor::setFunction(float (*function)(void)) {
-    this->function = function;
+    strncpy(this->metric, metric, SENSORMETRICLEN);
+    this->name[SENSORMETRICLEN-1] = '\0';
 }
 
 char* Sensor::getId() {
@@ -37,7 +48,7 @@ char* Sensor::getMetric() {
 }
 
 float Sensor::readValue() {
-    return (*function)();
+    return 0.0f;
 }
 
 Sensors::Sensors() {
@@ -52,36 +63,45 @@ Sensors::Sensors() {
     sensNum = 0;
 
     // create sensor objects
-    createVBatt();
-//    createVServo();
-    createV33();
-    createVLogic();
-    createTempSens();
-    createOdometry();
+    addSensor(new VoltageSensor("vBatt", "battery voltage", "V", 0, 3.3 * 8.25));   // Adjusted value of theoretical: 3.3V * 115k / 15k
+    addSensor(new VoltageSensor("vMC", "uC voltage", "V", 1, 3.3));   // Using it temporarily to measure 3.3 V supply of controller
+    addSensor(new VoltageSensor("vLogic", "logic voltage", "V", 2, 3.3 * 2.08));   // Adjusted value of theoretical: 3.3V * 94k / 47k
+    addSensor(new TemperatureSensor("Temp1", "ambient temperature", "°C", 0));
+    addSensor(new TemperatureSensor("Temp2", "power supply temperature", "°C", 1));
+    addSensor(new Odometry("Odo", "odometry", "cm"));
 }
 
 Sensors::~Sensors() {
+    for(int i=0;i<sensNum;i++)
+        delete sensArr[i];
+
     for(int i=0;i<=5;i++)
         delete analogInputs[i];
 }
 
+void Sensors::addSensor(Sensor *sensor) {
+    if(sensNum < MAX_NUM_SENS)
+        sensArr[sensNum++] = sensor;
+}
+
 Sensor* Sensors::getSensor(char *sId) {
+    printf("getSensor()\n");
     if(!strcmp(sId, "vBatt"))
-        return &sensArr[SENS_VBATT];
+        return sensArr[SENS_VBATT];
 //    else if(!strcmp(sId, "vServo"))
 //        return &sensArr[SENS_VSERVO];
     else if(!strcmp(sId, "vMC"))
-        return &sensArr[SENS_VMC];
+        return sensArr[SENS_VMC];
     else if(!strcmp(sId, "vMotor"))
-        return &sensArr[SENS_VBATT];
+        return sensArr[SENS_VBATT];
     else if(!strcmp(sId, "vLogic"))
-        return &sensArr[SENS_VLOGIC];
+        return sensArr[SENS_VLOGIC];
     else if(!strcmp(sId, "tAmbient"))
-        return &sensArr[SENS_TEMP1];
+        return sensArr[SENS_TEMP1];
     else if(!strcmp(sId, "tPS"))
-        return &sensArr[SENS_TEMP2];
+        return sensArr[SENS_TEMP2];
     else if(!strcmp(sId, "odo"))
-        return &sensArr[SENS_ODO];
+        return sensArr[SENS_ODO];
     return NULL;
 }
 
@@ -90,124 +110,3 @@ AnalogIn* Sensors::getAnalogIn(int aiId) {
         return analogInputs[aiId];
     return NULL;
 }
-
-float readVBatt() {
-    float factor = 3.3 * 8.25;    // Adjusted value of theoretical: 3.3V * 115k / 15k
-    return sensors->getAnalogIn(0)->read()*factor;
-}
-
-void Sensors::createVBatt() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vBatt");
-    s->setName("battery voltage");
-    s->setMetric("V");
-    s->setFunction(readVBatt);
-}
-
-//float readVServo() {
-float readV33() {
-//    float factor = 3.3 * 2; // Adjusted value of theoretical: 3.3V * 94k / 47k
-    float factor = 3.3; // Using it temporarily to measure 3.3 V supply of controller
-    return sensors->getAnalogIn(1)->read()*factor;
-}
-
-//void Sensors::createVServo() {
-void Sensors::createV33() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vMC");
-    s->setName("uC voltage");
-    s->setMetric("V");
-    s->setFunction(readV33);
-}
-
-float readVLogic() {
-    float factor = 3.3 * 2.08; // Adjusted value of theoretical: 3.3V * 94k / 47k
-    return sensors->getAnalogIn(2)->read()*factor;
-}
-
-void Sensors::createVLogic() {
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("vLogic");
-    s->setName("logic voltage");
-    s->setMetric("V");
-    s->setFunction(readVLogic);
-}
-
-DS1820* Sensors::getTempProbe(int pId) {
-    return ds1820Probe[pId];
-}
-
-float readTemp1() {
-    return sensors->getTempProbe(0)->temperature('c');
-}
-
-float readTemp2() {
-    return sensors->getTempProbe(1)->temperature('c');
-}
-
-void Sensors::convertTemperature(bool wait) {
-    if(ds1820SearchingDone)
-        ds1820Probe[0]->convertTemperature(wait, DS1820::all_devices);
-}
-
-void Sensors::createTempSens() {
-    int i, devices_found = 0;
-    ds1820SearchingDone = false;
-    
-    // Initialize the probe array to DS1820 objects
-    while(DS1820::unassignedProbe(PTC12)) { // D8
-        ds1820Probe[devices_found] = new DS1820(PTC12); // D8
-        devices_found++;
-        if (devices_found == MAX_NUM_DS)
-            break;
-    }
-    
-    printf("%d DS1820  probes found.\n", devices_found);
-    ds1820SearchingDone = true;
-    
-    ds1820Probe[0]->convertTemperature(true, DS1820::all_devices);
-    printf("Temperature converted.\n");
-    for(i=0;i<devices_found;i++)
-        printf("Temperature %d: %f°C\n", i, ds1820Probe[i]->temperature('c'));
-  
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("Temp1");
-    s->setName("ambient temperature");
-    s->setMetric("°C");
-    s->setFunction(readTemp1);
-    
-    s = &sensArr[sensNum++];
-    s->setId("Temp2");
-    s->setName("power supply temperature");
-    s->setMetric("°C");
-    s->setFunction(readTemp2);
-}
-
-void Sensors::incOdo() {
-    odoCount++;
-}
-
-int Sensors::readOdo() {
-    return odoCount;
-}
-
-void incrementOdo() {
-    sensors->incOdo();
-}
-
-float readOdometry() {
-    return sensors->readOdo();
-}
-
-void Sensors::createOdometry() {
-    hall = new InterruptIn(PTC16); // D0
-    odoCount = 0;
-    hall->rise(&incrementOdo);
-
-    Sensor *s = &sensArr[sensNum++];
-    s->setId("Odometry");
-    s->setName("Odometry");
-    s->setMetric("");
-    s->setFunction(readOdometry);
-}
-

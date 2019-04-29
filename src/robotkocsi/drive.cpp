@@ -58,7 +58,7 @@ void Drive::controlThread_main(void const *argument) {
                 forwardPower = 1.0f;  // initial torque
             else {
                 if(forwardPower > 0.2f)
-                    forwardPower -= 0.05f; // decreasing torque to a constant 20%
+                    forwardPower -= 0.1f; // decreasing torque to a constant 20%
             }
         } else
             forwardPower = 0.0f;
@@ -68,7 +68,7 @@ void Drive::controlThread_main(void const *argument) {
                 backwardPower = 1.0f;  // initial torque
             else {
                 if(backwardPower > 0.2f)
-                    backwardPower -= 0.05f; // decreasing torque to a constant 20%
+                    backwardPower -= 0.1f; // decreasing torque to a constant 20%
             }
         } else
             backwardPower = 0.0f;
