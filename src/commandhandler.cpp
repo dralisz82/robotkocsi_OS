@@ -36,29 +36,32 @@ void gotChar() {
     }
 }
 
-// Note: This function returns a pointer to a substring of the original string.
-// If the given string was allocated dynamically, the caller must not overwrite
-// that pointer with the returned value, since the original pointer must be
-// deallocated using the same allocator with which it was allocated.  The return
-// value must NOT be deallocated using free() etc.
-char *trimwhitespace(char *str)
-{
-  char *end;
+/**
+ * Note: This function returns a pointer to a substring of the original string.
+ * If the given string was allocated dynamically, the caller must not overwrite
+ * that pointer with the returned value, since the original pointer must be
+ * deallocated using the same allocator with which it was allocated.  The return
+ * value must NOT be deallocated using free() etc.
+ */
+char *trimwhitespace(char *str) {
+    char *end;
 
-  // Trim leading space
-  while(isspace((unsigned char)*str)) str++;
+    // Trim leading space
+    while(isspace((unsigned char)*str))
+        str++;
 
-  if(*str == 0)  // All spaces?
+    if(*str == 0)  // All spaces?
+        return str;
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end))
+        end--;
+
+    // Write new null terminator
+    *(end+1) = 0;
+
     return str;
-
-  // Trim trailing space
-  end = str + strlen(str) - 1;
-  while(end > str && isspace((unsigned char)*end)) end--;
-
-  // Write new null terminator
-  *(end+1) = 0;
-
-  return str;
 }
 
 void handleCommand() {
@@ -73,7 +76,7 @@ void handleCommand() {
 
     osEvent evt = cmdMailBox.get(); // receiving command from UART Interrupt handler
     if (evt.status != osEventMail)
-      return;
+        return;
     
     simplestr *mail = (simplestr*)evt.value.p;
     trimmedCommand = trimwhitespace(*mail);
@@ -83,13 +86,13 @@ void handleCommand() {
     token = strtok(trimmedCommand, separator); // TODO: replace with strtok_r()
     
     if(token == NULL)
-      return;
+        return;
     
     strcpy(cmd, token);
     
     /* walk through arguments */
     while( (token = strtok(NULL, separator)) != NULL ) {
-      strcpy(args[argIdx++], token);
+        strcpy(args[argIdx++], token);
     }
 
     cmdMailBox.free(mail);
@@ -104,3 +107,4 @@ void cmdHandlerMain(void) {
 //        Thread::wait(2000); // For testing purposes only
     }
 }
+

@@ -19,9 +19,15 @@ Sensors* sensors;
 Demo* demo;
 
 RawSerial BT(PTC15, PTC14);  // Bluetooth module header
+Timeout btConnTimeout;
 
 Thread hbThread;  // heartbeat thread
 extern Thread cmdHandlerThread;
+
+void onBTtimeout() {
+    drive->stop();
+    lights->hazardLightsOn();
+}
 
 void execCommand(char *cmd, int argc, simplestr *args) {
     if(!strcmp(cmd, "forward")) {
@@ -76,6 +82,8 @@ void execCommand(char *cmd, int argc, simplestr *args) {
         lights->hazardLightsOn();  // ignore invalid command, put emergency indicator on
     }
     printf("%s %d; %s, %s, %s, %s\n", cmd, argc, args[0], args[1], args[2], args[3]);
+    btConnTimeout.detach();
+    btConnTimeout.attach(&onBTtimeout, 2);
 }
 
 void checkBattery() {
@@ -145,6 +153,8 @@ int main() {
     BT.baud(9600); // HC-05 module works at this rate by default
     BT.attach(&gotChar); // register interrupt handler
 
+    btConnTimeout.attach(&onBTtimeout, 2);
+
     // index bal: PTA1 / D3
     // index jobb: PTB9 / D2
     // nappali fény: PTC3 / D7
@@ -177,3 +187,4 @@ int main() {
     }
     printf("End of main (never should be executed)\n");
 }
+
