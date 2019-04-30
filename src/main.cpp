@@ -31,22 +31,28 @@ void onBTtimeout() {
 
 void execCommand(char *cmd, int argc, simplestr *args) {
     if(!strcmp(cmd, "forward")) {
-        drive->forward();// lights->reversingLightOff();
+        drive->forward();
     }
     else if(!strcmp(cmd, "backward")) {
-        drive->backward();// lights->reversingLightOn();
+        drive->backward();
     }
     else if(!strcmp(cmd, "halt")) {
-        drive->stop();// lights->reversingLightOff();
+        drive->stop();
+    }
+    else if(!strcmp(cmd, "brake")) {
+        drive->brake();
+    }
+    else if(!strcmp(cmd, "nobrake")) {
+        drive->releaseBrake();
     }
     else if(!strcmp(cmd, "left")) {
-        drive->steerLeft();// lights->indexLeft();
+        drive->steerLeft();
     }
     else if(!strcmp(cmd, "right")) {
-        drive->steerRight();// lights->indexRight();
+        drive->steerRight();
     }
     else if(!strcmp(cmd, "straight")) {
-        drive->steerStraight();// lights->indexOff();
+        drive->steerStraight();
     }
     else if(!strcmp(cmd, "index_left")) {
         lights->indexLeft();
@@ -166,18 +172,19 @@ int main() {
     // féklámpa: PTA2 / D5
     lights = new Lights(PTA1, PTB9, PTC3, PTC2, PTB23, PTA2);
 
+    // sensor objects can be obtained from this object
+    sensors = new Sensors();
+    
     // előre: PTD0 / D10
     // hátra: PTD2 / D11
     // kormány: PTC4 / D9
     // passing lights, thus turning on automatic index and reversing lights
-    drive = new Drive(PTD0, PTD2, PTC4, lights);
+	// passing sensors to make odometric feedback and sonar based autobraking possible
+    drive = new Drive(PTD0, PTD2, PTC4, lights, sensors);
 
     // simple demo of autonomous operation (currently sensorless, timing based)
     demo = new Demo(drive, lights);
 
-    // sensor objects can be obtained from this object
-    sensors = new Sensors();
-    
     printf("Starting threads\n");
     
     hbThread.start(callback(hbThreadMain));

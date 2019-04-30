@@ -2,7 +2,7 @@
 #include <math.h>
 
 Drive::Drive() {}
-Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
+Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights, Sensors* sensors) {
     // create Pwm and Servo objects
     po_forward = new PwmOut(pF);
     po_backward = new PwmOut(pB);
@@ -12,6 +12,14 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
     autoIndex = (lights)?true:false;
     enabled = true;
     
+    if(sensors != NULL) {
+        this->odometry = sensors->getSensor("odo");
+        this->frontSonar = sensors->getSensor("sonFront");
+    } else {
+        this->odometry = NULL;
+        this->frontSonar = NULL;
+    }
+    
     po_forward->period(0.0001); // 10kHz
     po_backward->period(0.0001); // 10kHz
     po_steering->period(0.01); // 100Hz
@@ -19,7 +27,9 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights) {
     // initialize variables
     f_forward = false;
     f_backward = false;
+    f_brake = false;
     steeringTargetPosition = steerCenter;
+    driveSpeed = driveDefaultSpeed;
     
     controlThread = new Thread(controlThread_main, this);
 
@@ -55,23 +65,39 @@ void Drive::controlThread_main(void const *argument) {
         if(self->f_forward) {
             // motorDebug = true;
             if(forwardPower < 0.1f)
-                forwardPower = 1.0f;  // initial torque
+                forwardPower = 0.7f;  // initial torque
             else {
-                if(forwardPower > 0.2f)
-                    forwardPower -= 0.1f; // decreasing torque to a constant 20%
+                if(forwardPower > self->driveSpeed)
+                    forwardPower -= 0.1f; // decreasing torque to a constant 30%
             }
         } else
             forwardPower = 0.0f;
+
         if(self->f_backward) {
             // motorDebug = true;
             if(backwardPower < 0.1f)
-                backwardPower = 1.0f;  // initial torque
+                backwardPower = 0.7f;  // initial torque
             else {
-                if(backwardPower > 0.2f)
-                    backwardPower -= 0.1f; // decreasing torque to a constant 20%
+                if(backwardPower > self->driveSpeed)
+                    backwardPower -= 0.1f; // decreasing torque to a constant 30%
             }
         } else
             backwardPower = 0.0f;
+
+        if(self->f_brake) {
+            float speed = self->odometry->readValue(Odometry::CurrentSpeed);
+            float brakingPower = (fabs(speed) > 9)?0.9f:(fabs(speed) / 10 );
+            if(speed > 0.5) {
+                forwardPower = 0.0f;
+                backwardPower = brakingPower;
+            } else if(speed < -0.5) {
+                forwardPower = brakingPower;
+                backwardPower = 0.0f;
+            } else {
+                forwardPower = 0.0f;
+                backwardPower = 0.0f;
+            }
+        }
 
         self->po_forward->write(forwardPower);
         self->po_backward->write(backwardPower);
@@ -121,6 +147,24 @@ void Drive::stop() {
     f_backward = false;
 }
 
+void Drive::brake() {
+    stop();
+    if(odometry == NULL)
+        return;
+
+    if(lights) {
+        lights->brakeLightOn();
+    }
+    f_brake = true;
+}
+
+void Drive::releaseBrake() {
+    if(lights) {
+        lights->brakeLightOff();
+    }
+    f_brake = false;
+}
+
 void Drive::steerLeft(float target, float speed) {
     if(!enabled)
         return;
@@ -167,4 +211,8 @@ bool Drive::setEnabled(bool enabled) {
         printf("Enabling drive...\n");
     
     return true;    // return true on change
+}
+
+float Drive::setSpeed(float speed) {
+    driveSpeed = speed;
 }
