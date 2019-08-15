@@ -86,11 +86,11 @@ void Drive::controlThread_main(void const *argument) {
 
         if(self->f_brake) {
             float speed = self->odometry->readValue(Odometry::CurrentSpeed);
-            float brakingPower = (fabs(speed) > 9)?0.9f:(fabs(speed) / 10 );
-            if(speed > 0.5) {
+            float brakingPower = (fabs(speed) > 9)?0.3f:(fabs(speed) / 1000 );
+            if(speed > 7) {
                 forwardPower = 0.0f;
                 backwardPower = brakingPower;
-            } else if(speed < -0.5) {
+            } else if(speed < -7) {
                 forwardPower = brakingPower;
                 backwardPower = 0.0f;
             } else {
@@ -213,6 +213,6 @@ bool Drive::setEnabled(bool enabled) {
     return true;    // return true on change
 }
 
-float Drive::setSpeed(float speed) {
+void Drive::setSpeed(float speed) {
     driveSpeed = speed;
 }

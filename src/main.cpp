@@ -26,7 +26,6 @@ extern Thread cmdHandlerThread;
 
 void onBTtimeout() {
     drive->stop();
-    lights->hazardLightsOn();
 }
 
 void execCommand(char *cmd, int argc, simplestr *args) {
@@ -179,7 +178,7 @@ int main() {
     // hátra: PTD2 / D11
     // kormány: PTC4 / D9
     // passing lights, thus turning on automatic index and reversing lights
-	// passing sensors to make odometric feedback and sonar based autobraking possible
+    // passing sensors to make odometric feedback and sonar based autobraking possible
     drive = new Drive(PTD0, PTD2, PTC4, lights, sensors);
 
     // simple demo of autonomous operation (currently sensorless, timing based)

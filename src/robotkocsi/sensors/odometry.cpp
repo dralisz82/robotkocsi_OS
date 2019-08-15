@@ -4,10 +4,12 @@ void Odometry::init() {
     hallA = new InterruptIn(PTC16); // D0
     hallB = new InterruptIn(PTC17); // D1
     timer.start();
-    lastHall = X;
-    dir = FW;
-    hallA->rise(callback(this, &Odometry::hallAISR));
-    hallB->rise(callback(this, &Odometry::hallBISR));
+    hallTimeout.attach(callback(this, &Odometry::clearSpeed), 1);
+    dir = X;
+    hallA->rise(callback(this, &Odometry::hallAriseISR));
+    hallA->fall(callback(this, &Odometry::hallAfallISR));
+    hallB->rise(callback(this, &Odometry::hallBriseISR));
+    hallB->fall(callback(this, &Odometry::hallBfallISR));
 
     previousTime = timer.read_ms();
     previousSpeed = 0;
@@ -19,9 +21,14 @@ void Odometry::init() {
     highestSpeed = 0;
 }
 
-void Odometry::hallAISR(void) {
-    if(lastHall == A)
-        toggleDir();
+void Odometry::hallAriseISR(void) {
+    if(hallB->read() == 0) {
+        // 00 -> 10
+        dir = BW;
+    } else {
+        // 01 -> 11
+        dir = FW;
+    }
 
     if(dir == FW)
         odoPos++;
@@ -29,14 +36,17 @@ void Odometry::hallAISR(void) {
         odoPos--;
 
     odoCount++;
-    calcSpeed(A);
-
-    lastHall = A;
+    calcSpeed();
 }
 
-void Odometry::hallBISR(void) {
-    if(lastHall == B)
-        toggleDir();
+void Odometry::hallAfallISR(void) {
+    if(hallB->read() == 0) {
+        // 10 -> 00
+        dir = FW;
+    } else {
+        // 11 -> 01
+        dir = BW;
+    }
 
     if(dir == FW)
         odoPos++;
@@ -44,21 +54,49 @@ void Odometry::hallBISR(void) {
         odoPos--;
 
     odoCount++;
-    calcSpeed(B);
-
-    lastHall = B;
+    calcSpeed();
 }
 
-void Odometry::calcSpeed(HallID actHall) {
-    // Prevent division by zero -> side effect: measuring limit under 5000 RPM (@12 PPR)
+void Odometry::hallBriseISR(void) {
+    if(hallA->read() == 0) {
+        // 00 -> 01
+        dir = FW;
+    } else {
+        // 10 -> 11
+        dir = BW;
+    }
+
+    if(dir == FW)
+        odoPos++;
+    else
+        odoPos--;
+
+    odoCount++;
+    calcSpeed();
+}
+
+void Odometry::hallBfallISR(void) {
+    if(hallA->read() == 0) {
+        // 01 -> 00
+        dir = BW;
+    } else {
+        // 11 -> 10
+        dir = FW;
+    }
+
+    if(dir == FW)
+        odoPos++;
+    else
+        odoPos--;
+
+    odoCount++;
+    calcSpeed();
+}
+
+void Odometry::calcSpeed() {
+    // Prevent division by zero -> side effect: measuring limit under 833 RPM (@72 PPR)
     if(timer.read_ms() == previousTime)
         return;
-    
-    // Handle direction change
-    if(actHall == lastHall) {
-        currentSpeed = 0;
-        return;
-    }
     
     // Current speed calculation
     currentSpeed = (WHEELCIRCUMFERENCE / PPR) * 100 / (timer.read_ms() - previousTime);
@@ -73,15 +111,15 @@ void Odometry::calcSpeed(HallID actHall) {
 
     previousTime = timer.read_ms();
     previousSpeed = currentSpeed;
+
+    hallTimeout.detach();
+    hallTimeout.attach(callback(this, &Odometry::clearSpeed), 1);
 }
 
-
-void Odometry::toggleDir() {
-    if(dir == FW)
-        dir = BW;
-    else
-        dir = FW;
+void Odometry::clearSpeed() {
+    currentSpeed = 0;
 }
+    
 
 /// Public functions
 
@@ -115,7 +153,7 @@ float Odometry::readValue(unsigned int readingId) {
     switch(readingId) {
         case Distance:          return odoCount * (WHEELCIRCUMFERENCE / PPR) / 10.0;
         case RelativePosition:  return odoPos * (WHEELCIRCUMFERENCE / PPR) / 10.0;
-        case CurrentSpeed:      return currentSpeed * (dir == FW)?1:-1;
+        case CurrentSpeed:      return currentSpeed * ((dir == BW)?-1:1);
         case AvgSpeed:          return avgSpeed;
         case HighestSpeed:      return highestSpeed;
     }

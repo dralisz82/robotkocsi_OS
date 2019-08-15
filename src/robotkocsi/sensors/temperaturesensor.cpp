@@ -29,6 +29,7 @@ void TemperatureSensor::convertTemperature(bool wait) {
 
 DS1820* TemperatureSensor::getTempProbe(int probeId) {
 //    return ds1820Probe[probeId];
+    return NULL;
 }
 
 float TemperatureSensor::readValue(unsigned int readingId) {

@@ -4,7 +4,7 @@
 #include "sensors.h"
 
 #define WHEELCIRCUMFERENCE 345.0
-#define PPR 12
+#define PPR 72
 
 class Odometry : public Sensor {
 
@@ -18,17 +18,19 @@ public:
     virtual float readValue(unsigned int readingId = 0);
     
 private:
-    enum HallID {X, A, B};
-    enum Direction {FW, BW};
+    enum Direction {X, FW, BW};
 
     // ISRs and other internal stuff
     InterruptIn *hallA, *hallB;
     Timer timer;
-    void hallAISR(void);
-    void hallBISR(void);
-    void toggleDir();
-    void calcSpeed(HallID actHall);
-    HallID lastHall;    // ID of sensor, triggered last
+    Timeout hallTimeout;
+    void hallAriseISR(void);
+    void hallAfallISR(void);
+    void hallBriseISR(void);
+    void hallBfallISR(void);
+    void calcSpeed();
+    void clearSpeed();
+
     Direction dir;      // Direction of rotation
     
     // Internal variables to measure

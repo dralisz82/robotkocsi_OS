@@ -30,7 +30,7 @@ public:
     void steerStraight(float speed = steeringNormStep);
     void setAutoIndex(bool autoIndex);
     bool setEnabled(bool enabled);
-    float setSpeed(float speed);
+    void setSpeed(float speed);
 
 private:
     bool f_forward;
