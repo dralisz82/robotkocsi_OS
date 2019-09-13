@@ -122,7 +122,7 @@ void checkBattery() {
  * Heartbeat thread main loop
  */
 void hbThreadMain(void) {
-    int timer = 0;
+    unsigned int timer = 0;
     heartbeatLED = &normalLED;
     
     Sensor *s = sensors->getSensor("odo");

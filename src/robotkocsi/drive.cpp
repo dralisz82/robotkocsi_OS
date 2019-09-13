@@ -56,6 +56,8 @@ void Drive::controlThread_main(void const *argument) {
     self->steeringStep = steeringNormStep;
     bool steeringDebug = false;
 
+    unsigned int timer = 0;
+
     // center steering
     self->po_steering->write(steeringServoPosition);
 
@@ -84,7 +86,8 @@ void Drive::controlThread_main(void const *argument) {
         } else
             backwardPower = 0.0f;
 
-        if(self->f_brake) {
+        if(self->f_brake && (timer % 5 == 0)) {
+            // 20 Hz
             float speed = self->odometry->readValue(Odometry::CurrentSpeed);
             float brakingPower = (fabs(speed) > 9)?0.3f:(fabs(speed) / 1000 );
             if(speed > 7) {
@@ -118,6 +121,7 @@ void Drive::controlThread_main(void const *argument) {
             self->po_steering->write(steeringServoPosition);
         }
 
+        timer++;
         Thread::wait(10);   // 100 Hz
     }
 }

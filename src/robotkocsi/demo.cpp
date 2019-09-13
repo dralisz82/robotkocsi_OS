@@ -24,6 +24,39 @@ void Demo::demoThread_main(void const *argument) {
 //    Thread::wait(1000);
     while(true) {
         while(self->f_run) {
+            self->lights->headLightOn();
+            self->drive->steerStraight();
+            Thread::wait(1000);
+            self->drive->forward();
+            Thread::wait(1500);
+            self->drive->stop();
+            Thread::wait(2000);
+            self->drive->backward();
+            Thread::wait(1500);
+            self->drive->stop();
+            Thread::wait(2000);
+            self->lights->headLightOff();
+            Thread::wait(3000);
+
+            self->lights->headLightOn();
+            self->drive->steerStraight();
+            Thread::wait(1000);
+            self->drive->forward();
+            Thread::wait(1500);
+            self->drive->brake();
+            Thread::wait(2000);
+            self->drive->releaseBrake();
+            self->drive->backward();
+            Thread::wait(1500);
+            self->drive->brake();
+            Thread::wait(2000);
+            self->drive->releaseBrake();
+            self->lights->headLightOff();
+            Thread::wait(1000);
+        }
+            
+        while(false) {
+            // implicitly deactivated
             self->drive->steerLeft();
             Thread::wait(1500);
             self->drive->steerRight();
@@ -50,7 +83,7 @@ void Demo::demoThread_main(void const *argument) {
             self->drive->steerStraight(0.005f);
         }
 
-        while(self->f_run) {
+        while(false) {
             // implicitly deactivated
             self->drive->forward();
             self->drive->steerLeft();
