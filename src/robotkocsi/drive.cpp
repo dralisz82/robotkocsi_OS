@@ -63,6 +63,22 @@ void Drive::controlThread_main(void const *argument) {
 
     // 100 Hz control loop
     while (true) {
+        // emergency braking
+        if((self->frontSonar->readValue() < 90 && self->odometry->readValue(Odometry::CurrentSpeed) > 250) ||
+           (self->frontSonar->readValue() < 60 && self->odometry->readValue(Odometry::CurrentSpeed) > 200) ||
+           (self->frontSonar->readValue() < 30 && self->odometry->readValue(Odometry::CurrentSpeed) > 0)) {
+            self->f_forward = false;
+            self->f_brake = true;
+            self->lights->brakeLightOn();
+            self->lights->hazardLightsOn();
+        }
+        
+        // brake persistence (needed to prevent altering braking power by main drive control, as it is updated only in every 5th cycle)
+        if(self->f_brake) {
+            self->f_forward = false;
+            self->f_backward = false;
+        }
+
         // main drive control
         if(self->f_forward) {
             // motorDebug = true;
@@ -220,3 +236,4 @@ bool Drive::setEnabled(bool enabled) {
 void Drive::setSpeed(float speed) {
     driveSpeed = speed;
 }
+
