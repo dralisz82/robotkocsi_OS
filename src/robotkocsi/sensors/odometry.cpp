@@ -100,10 +100,13 @@ void Odometry::calcSpeed() {
     
     // Current speed calculation
     currentSpeed = (WHEELCIRCUMFERENCE / PPR) * 100 / (timer.read_ms() - previousTime);
+    
+    // Filtering spike values
+    currentSpeed = (previousSpeed + currentSpeed)/2;
 
     // Highest speed calculation
-    if((previousSpeed + currentSpeed)/2 > highestSpeed)
-        highestSpeed = (previousSpeed + currentSpeed)/2;
+    if(currentSpeed > highestSpeed)
+        highestSpeed = currentSpeed;
     
     // Average speed calculation
     speedSum += currentSpeed;   // TODO: this will overflow once, far in the future

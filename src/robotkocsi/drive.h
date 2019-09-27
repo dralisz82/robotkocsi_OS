@@ -31,6 +31,9 @@ public:
     void setAutoIndex(bool autoIndex);
     bool setEnabled(bool enabled);
     void setSpeed(float speed);
+    bool emergencyBrakingOccured();
+    float getEmergencyBrakingDistance();
+    float getEmergencyBrakingSpeed();
 
 private:
     bool f_forward;
@@ -48,6 +51,10 @@ private:
     Sensor* frontSonar;
     bool autoIndex;
     bool enabled;
+
+    bool unacknowledgedEmergencyBraking;
+    float emergencyBrakingDistance;
+    float emergencyBrakingSpeed;
 
     Thread *controlThread;
     static void controlThread_main(void const *argument);

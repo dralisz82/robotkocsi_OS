@@ -31,6 +31,11 @@ Drive::Drive(PinName pF, PinName pB, PinName pS, Lights* lights, Sensors* sensor
     steeringTargetPosition = steerCenter;
     driveSpeed = driveDefaultSpeed;
     
+    // black box data
+    unacknowledgedEmergencyBraking = false;
+    emergencyBrakingDistance = 0;
+    emergencyBrakingSpeed = 0;
+    
     controlThread = new Thread(controlThread_main, this);
 
     printf("Drive created\n");
@@ -64,13 +69,18 @@ void Drive::controlThread_main(void const *argument) {
     // 100 Hz control loop
     while (true) {
         // emergency braking
-        if((self->frontSonar->readValue() < 90 && self->odometry->readValue(Odometry::CurrentSpeed) > 250) ||
-           (self->frontSonar->readValue() < 60 && self->odometry->readValue(Odometry::CurrentSpeed) > 200) ||
+        if((self->frontSonar->readValue() < 70 && self->odometry->readValue(Odometry::CurrentSpeed) > 250) ||
+           (self->frontSonar->readValue() < 40 && self->odometry->readValue(Odometry::CurrentSpeed) > 200) ||
            (self->frontSonar->readValue() < 30 && self->odometry->readValue(Odometry::CurrentSpeed) > 0)) {
             self->f_forward = false;
             self->f_brake = true;
             self->lights->brakeLightOn();
             self->lights->hazardLightsOn(3);
+            if(!self->unacknowledgedEmergencyBraking) {
+                self->unacknowledgedEmergencyBraking = true;
+                self->emergencyBrakingDistance = self->frontSonar->readValue();
+                self->emergencyBrakingSpeed = self->odometry->readValue(Odometry::CurrentSpeed);
+            }
         }
         
         // brake persistence (needed to prevent altering braking power by main drive control, as it is updated only in every 5th cycle)
@@ -237,3 +247,15 @@ void Drive::setSpeed(float speed) {
     driveSpeed = speed;
 }
 
+bool Drive::emergencyBrakingOccured() {
+    return unacknowledgedEmergencyBraking;
+}
+
+float Drive::getEmergencyBrakingDistance() {
+    unacknowledgedEmergencyBraking = false;
+    return emergencyBrakingDistance;
+}
+    
+float Drive::getEmergencyBrakingSpeed() {
+    return emergencyBrakingSpeed;
+}

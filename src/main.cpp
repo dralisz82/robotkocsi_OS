@@ -30,6 +30,8 @@ void onBTtimeout() {
 
 void execCommand(char *cmd, int argc, simplestr *args) {
     if(!strcmp(cmd, "forward")) {
+        if(drive->emergencyBrakingOccured())
+            BT.printf("Emergency braking at: %.1f cm with speed: %.1f cm/s\n", drive->getEmergencyBrakingDistance(), drive->getEmergencyBrakingSpeed());
         drive->forward();
     }
     else if(!strcmp(cmd, "backward")) {
@@ -42,6 +44,8 @@ void execCommand(char *cmd, int argc, simplestr *args) {
         drive->brake();
     }
     else if(!strcmp(cmd, "nobrake")) {
+        if(drive->emergencyBrakingOccured())
+            BT.printf("Emergency braking at: %.1f cm with speed: %.1f cm/s\n", drive->getEmergencyBrakingDistance(), drive->getEmergencyBrakingSpeed());
         drive->releaseBrake();
     }
     else if(!strcmp(cmd, "left")) {
