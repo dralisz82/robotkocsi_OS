@@ -18,11 +18,13 @@ Drive* drive;
 Sensors* sensors;
 Demo* demo;
 
+Serial pc(USBTX, USBRX);
 RawSerial BT(PTC15, PTC14);  // Bluetooth module header
 Timeout btConnTimeout;
 
 Thread hbThread;  // heartbeat thread
 extern Thread cmdHandlerThread;
+Thread tmThread;  // telemetry thread
 
 void onBTtimeout() {
     drive->stop();
@@ -121,7 +123,7 @@ void checkBattery() {
         }
     }
 }
-    
+
 /**
  * Heartbeat thread main loop
  */
@@ -140,19 +142,44 @@ void hbThreadMain(void) {
         
         if(timer % 30 == 0) // once in every 60 seconds
             checkBattery();
-        if(timer % 5 == 0) // once in every 10 seconds
-            printf("Odometry total distance: %f %s\n", s->readValue(), s->getMetric());
+//        if(timer % 5 == 0) // once in every 10 seconds
+//            printf("Odometry total distance: %f %s\n", s->readValue(), s->getMetric());
         if(timer % 1 == 0) { // once in every 2 seconds
-            printf("Front sonar distance: %f %s\n", s2->readValue(), s2->getMetric());
-            printf("Speed: %f %s\n", s->readValue(Odometry::CurrentSpeed), s->getMetric(Odometry::CurrentSpeed));
             //sensors->convertTemperature(false); // TODO: improve DS18B20 lib robustness, then uncomment
         }
         timer++;
     }
 }
 
+/**
+ * Telemetry thread main loop
+ */
+void tmThreadMain(void) {
+    Sensor *odometry = sensors->getSensor("odo");
+    Sensor *frontSonar = sensors->getSensor("sonFront");
+
+    // 10 Hz update loop
+    while(true) {
+        float speed = odometry->readValue(Odometry::CurrentSpeed);
+        if(speed != 0)
+            printf("Speed: %.1f %s", speed, odometry->getMetric(Odometry::CurrentSpeed));
+            
+        float clearance = frontSonar->readValue();
+        if(clearance < 90) {
+            if(speed != 0) {
+                printf(" | Front sonar clearance: %.1f %s", clearance, frontSonar->getMetric());
+            }
+        }
+        
+        if((speed != 0))//||(clearance < 90))
+            printf("\n");
+        
+        Thread::wait(100);
+    }
+}
 
 int main() {
+    pc.baud(115200);
     printf("OS Started\n");
 
     // Init peripherals
@@ -164,7 +191,7 @@ int main() {
 
     BT.baud(9600); // HC-05 module works at this rate by default
     BT.attach(&gotChar); // register interrupt handler
-
+    
     btConnTimeout.attach(&onBTtimeout, 2);
 
     // index bal: PTA1 / D3
@@ -192,6 +219,7 @@ int main() {
     
     hbThread.start(callback(hbThreadMain));
     cmdHandlerThread.start(callback(cmdHandlerMain));
+    tmThread.start(callback(tmThreadMain));
     
     // main control loop
     while(1) {
@@ -200,4 +228,3 @@ int main() {
     }
     printf("End of main (never should be executed)\n");
 }
-
