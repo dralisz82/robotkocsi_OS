@@ -70,7 +70,7 @@ void Drive::controlThread_main(void const *argument) {
             self->f_forward = false;
             self->f_brake = true;
             self->lights->brakeLightOn();
-            self->lights->hazardLightsOn();
+            self->lights->hazardLightsOn(3);
         }
         
         // brake persistence (needed to prevent altering braking power by main drive control, as it is updated only in every 5th cycle)

@@ -10,11 +10,11 @@ public:
     Lights(PinName pIL, PinName pIR, PinName pHL, PinName pHB, PinName pRL, PinName pBL);
     ~Lights();
 
-    void indexLeft();
-    void indexRight();
+    void indexLeft(int blinks = 0);
+    void indexRight(int blinks = 0);
     void indexOff();
 
-    void hazardLightsOn();
+    void hazardLightsOn(int blinks = 0);
     void hazardLightsOff();
 
     void headLightOn();
@@ -34,7 +34,8 @@ public:
 private:
     bool f_indexLeft;
     bool f_indexRight;
-
+    int numBlinks;
+    
     DigitalOut* do_indexLeft;
     DigitalOut* do_indexRight;
     DigitalOut* do_headLight;

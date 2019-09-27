@@ -15,6 +15,8 @@ Lights::Lights(PinName pIL, PinName pIR, PinName pHL, PinName pHB, PinName pRL, 
     f_indexLeft = false;
     f_indexRight = false;
     
+    numBlinks = 0;
+    
     indexThread = new Thread(indexThread_main, this);
     printf("Lights created\n");
 }
@@ -44,18 +46,31 @@ void Lights::indexThread_main(void const *argument) {
             self->do_indexRight->write(!self->do_indexRight->read());
         else
             self->do_indexRight->write(0);
+
+        if(self->numBlinks > 0) {
+            if(self->numBlinks == 1) {
+                self->f_indexLeft = false;
+                self->f_indexRight = false;
+            }
+            self->numBlinks--;
+        }
+
         Thread::wait(500);
     }
 }
 
-void Lights::indexLeft() {
+void Lights::indexLeft(int blinks) {
     f_indexLeft = true;
     f_indexRight = false;
+    if(blinks > 0)
+        numBlinks = blinks;
 }
 
-void Lights::indexRight() {
+void Lights::indexRight(int blinks) {
     f_indexLeft = false;
     f_indexRight = true;
+    if(blinks > 0)
+        numBlinks = blinks;
 }
 
 void Lights::indexOff() {
@@ -63,9 +78,11 @@ void Lights::indexOff() {
     f_indexRight = false;
 }
 
-void Lights::hazardLightsOn() {
+void Lights::hazardLightsOn(int blinks) {
     f_indexLeft = true;
     f_indexRight = true;
+    if(blinks > 0)
+        numBlinks = blinks;
 }
 
 void Lights::hazardLightsOff() {
